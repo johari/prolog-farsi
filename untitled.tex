@@ -1,0 +1,445 @@
+\documentclass{article}
+\usepackage{geometry}
+\geometry{paperheight=5in,paperwidth=6.66in}
+\usepackage{minted}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{hyperref}
+\usepackage{xepersian}
+
+\settextfont{XB Zar}
+\setlatintextfont{Linux Libertine}
+
+\begin{document}
+\setcounter{section}{0}
+{
+\noindent
+\Large \bf نیما جوهری \\ \vspace{2cm} \\
+زبان برنامه‌نویسی \lr{\tt PROLOG}
+\\
+ارائه برای درس زبان‌های برنامه‌سازی
+\\
+آذر ۱۳۹۱
+}
+\clearpage
+\section{پرولوگ چیست؟}
+\begin{itemize}
+  \item زبان برنامه‌نویسی: حاصل از پژوهش‌ها در زمینه‌ی «برنامه نویسی بر پایه منطقی ریاضی»
+  \item طراحی شده در دهه‌ی ۷۰ میلادی توسط
+    «آلین کولمراور \footnote{\lr{Alain Colmerauer}}» در مارسی \footnote{\lr{Marseille}}، فرانسه.
+\end{itemize}
+اولین سیستم پرولوگ در سال ۱۹۷۲ توسط «کولمراور» و
+«فیلیپ راسل \footnote{\lr{Philippe Roussel}}» نوشته شد.
+
+\begin{figure}[!h]
+  \begin{center}
+    {\includegraphics[width=12cm]{marseille.jpg}}
+  \end{center}
+  \caption{پانورامایی از شهر مارسی}
+\end{figure}
+
+\clearpage
+\noindent پرولوگ یکی از رایج‌ترین زبان‌ها در عرصه‌ی هوش مصنوعی‌ست. بر خلاف‌زبان‌های \lr{imperative}
+مانند \lr{c} یا \lr{Java}، پرولوگ یک زبان \lr{declarative} است.
+
+بدین معنی که برای حل مساله در پرولوگ، صرفا شرایط را توصیف می‌کنیم و در مورد نحوه
+رسیدن به راه حل تصمیم نمی‌گیریم.
+اما در زبان‌های \lr{imperative}، قدم به قدم برنامه را در رسیدن به راه حل پیش می‌بریم.
+
+پرولوگ برای برخی زمینه‌های برنامه نویسی، مانند هوش مصنوعی و پردازش زبان طبیعی
+کارگشا و برای برخی عرصه‌ها، مانند برنامه‌نویسی گرافیکی یا محاسبات عددی زبانی نامناسب است.
+
+برای حل مساله در پرولوگ، ابتدا جهان را بوسیله‌ی رابطه‌ها، مدل می‌کنیم.
+برای مثال، یک باغ‌وحش را در نظر بگیرید. در باغ‌وحش داریم:
+\begin{minted}{prolog}
+  bigger(elephant,dog).
+\end{minted}
+به قطعه کد بالا که با «نقطه» به پایان رسیده، فرض درست (حقیقت) \footnote{\lr{Fact}} گفته می‌شود.
+کد بالا بطور شهودی بیان می‌کند فیل از سگ بزرگ‌تر است.
+
+با اضافه کردن چند فرض دیگر به برنامه، جهان را کامل تر می‌کنیم:
+\begin{minted}{prolog}
+  bigger(elephant, horse).
+  bigger(horse, donkey).
+  bigger(donkey, dog).
+  bigger(donkey, monkey).
+\end{minted}
+
+حال می‌توانیم پس از فراخوانی فایل مبدا، از مفسر پرولوگ در مورد جهان پرسش نماییم:
+\footnote{به این عمل در اصطلاح، «\lr{query}» گرفتن می‌گویند.}
+\begin{minted}{raw}
+  $ swipl -f zoo.prolog
+  ?- bigger(donkey, dog).
+  Yes
+  ?- bigger(monkey, elephant).
+  No
+\end{minted}
+حال سوال زیر را مطرح می‌کنیم:
+\begin{minted}{raw}
+  ?- bigger(elephant, monkey).
+  No
+\end{minted}
+
+\noindent جواب داده شده با شهود ما از رابطه‌ی بزرگتری در باغ‌وحش فرضی‌مان سازگار نیست.
+این بدین خاطر است که در مدلی که ما از جهان
+ارائه کردیم
+صحبتی از تعدی بودن رابطه‌ی \lr{\tt bigger} نشده، با اینکه فیل از اسب از خر از میمون بزرگ‌تر است.
+پس ایراد در مدل ناقصی‌ست که ما از
+جهان ارائه کردیم.
+
+\clearpage
+{\Large \bf \* \vspace{3cm} \*
+
+\noindent
+قبل از تعریف رابطه‌ی ذکر شده بصورت یک رابطه‌ی تعدی، بطور دقیق‌تر به ساختار زبانی برنامه‌های
+پرولوگ می‌پردازیم.
+}
+\clearpage
+
+\section{\lr{Syntax} زبان پرولوگ}
+\subsection{ترم ها}
+ساختمان داده‌ی اصلی زبان پرولوگ، ترم‌ها به ۴ دسته اصلی تقسیم می‌شوند:
+  \\
+{\bf اتم‌ها:}
+  رشته‌های پیوسته (بدون فاصله) از کاراکترها که با حرف کوچک شروع می‌شوند.
+  همچنین رشته‌ای از علامات هم در رده‌ی ترم‌های اتمی قرار می‌گیرند.
+  عبارات با فاصله نیز، در صورت قرار گرفتن بین «\lr{\tt '}» یک ترم اتمی
+  درنظر گرفته می‌شوند.
+  \begin{flushleft}
+    \lr{\tt term *** a\_long\_term + <---> 'a long term with space'}
+  \end{flushleft}
+{\bf اعداد:} رشته‌ای از کاراکتر‌های عددی
+  \begin{flushleft}
+    \lr{\tt 0 4.2 -3 3.0e4}
+  \end{flushleft}
+{\bf متغیر:} رشته‌ای بی‌فاصله از کاراکتر‌ها که با حرف بزرگ یا «ـ» شروع می‌شند.
+  \begin{flushleft}
+    \lr{\tt Animal \_X\_1\_2 MyVariable X \_}
+  \end{flushleft}
+{\bf ترم مرکب:} از قرار گیری ترم اتمی، پرانتز باز، تعدادی ترم که با ویرگول از هم جدا شده‌اند و پرانتز بسته بدست می‌آیند.
+  \begin{flushleft}
+    \lr{\tt is\_bigger(horse, X) f(g(X,\_), 7) 'My Functor'(dog)}
+  \end{flushleft}
+
+
+\subsection{گزاره‌ها}
+همچنین اجتماع مجموعه‌ی اتم‌ها و ترم‌های مرکب، مجموعه گزاره‌ \footnote{\lr{Predicate}}های پرولوگ را تشکیل می‌دهند.
+
+\subsection{نمادگذاری ترم‌های مرکب در مستندات}
+بطور قراردادی، در مستندات و کتاب‌های موجود پیرامون زبان پرولوگ،
+ترم مرکبی مانند \lr{\tt length} با \lr{\tt 2} آرگومان را با نماد
+\lr{\tt length/2} نمایش می‌دهند.
+\clearpage
+\subsection{کلاز‌ها}
+مجموعه‌ی قواعد
+\footnote{\lr{Rule}}
+و فرض‌ها در پرولوگ، مجموعه‌ی کلاز‌ها را تشکیل می‌دهند.
+\\
+{\bf فرضها:} در مثال بالا بطور غیر رسمی با فرضها آشنا شده ایم.
+از قرار گرفتن یک «نقطه» بعد از گزاره، یک فرض حاصل می‌شود.
+  \begin{flushleft}
+    \lr{\tt bigger(whale, \_). life\_is\_beautiful.}
+  \end{flushleft}
+{\bf قواعد:} یک قاعده شامل «سر»، علامت \lr{\tt :-} و «بدنه»ی قاعده است که بدنه
+  دنباله‌ای از گزاره‌هاست که با علامت ویرگول از هم جدا شده‌اند.
+  نماد «نقطه» نمایانگر پایان تعریف قاعده است.
+
+
+  معنی شهودی قاعده این است که هدف بیان شده توسط سر قاعده درست است اگر بتوان نشان داد
+  که تمامی عبارات بدنه‌ی قاعده برقرار هستند.
+  \begin{minted}{prolog}
+    is_smaller(X, Y) :- is_bigger(Y, X).
+    aunt(Aunt, Child) :-
+      sister(Aunt, Parent),
+      parent(Parent, Child).
+  \end{minted}
+
+\clearpage
+\subsection{برنامه}
+دنباله‌ای از کلاز‌ها، یک برنامه‌ی پرولوگ را تشکیل می‌دهند.
+
+\subsection{کوئری‌ها}
+بعد از کامپیال، برنامه پرولوگ با ثبت کوئری‌ها در مفسر اجرا می‌شود.
+یک کوئری، از نظر ساختار زبانی، همان ساختار بدنه‌ی قاعده را داراست.
+کوئری‌ها را در مفسر پرولوگ، بعد از علامت \lr{\tt ?-} می‌نویسند.
+  \begin{minted}{prolog}
+      ?- is_bigger(elephant, donkey).
+      ?- small(X), green(X), slimy(X).
+  \end{minted}
+\clearpage
+\subsection{لیست‌ها}
+لیست‌ها را می‌توان در حقیقت با بهره‌گیری از ترم‌ها تعریف کرد.
+نماد \lr{\tt []} را برای لیست خالی در نظر می‌گیریم و لیست تک عنصری را
+معادل ترم مرکب زیر با استفاده از فانکتور ویژه‌ی «\lr{\tt .}» در نظر می‌گیریم:
+\begin{center}
+  \lr{\tt [a] = .(a, [])}
+\end{center}
+بهمین ترتیب:
+\begin{center}
+  \lr{\tt [a, b, c] = .(a, .(b, .(c, [])))}
+\end{center}
+به عنصر ابتادیی لیست، «سر»\footnote{\lr{Head}} و به لیستی که سر لیست اولیه به آن متصل
+است، «دم»\footnote{\lr{Tail}} یا «دنباله»‌ی لیست اولی می‌گوییم. از نمادگذاری \lr{\tt [H|T]} نیز
+می‌توان برای ساختن لیست‌ها استفاده کرد.
+
+\clearpage
+مثال‌های زیر، تعاریف بالا در مورد لیست‌ها را بهتر بیان می‌کنند:
+\begin{minted}{prolog}
+?- .(a, .(b, .(c, []))) = [a,b,c].
+true.
+
+?- .(a,.(b,X)) = [a,b,c].
+X = [c].
+
+?- [H|T] = [a,b,c].
+H = a,
+T = [b, c].
+
+?- [H|T] = [a].
+H = a,
+T = [].
+
+?- [a|[b,c]] = [a,b,c].
+true.
+\end{minted}
+
+\section{مثال: بستار تعدی رابطه‌ی \lr{\tt bigger}}
+حال می‌توانیم رابطه‌ی جدیدی را با استفاده از قواعد زیر تعریف کنیم:
+\begin{minted}{prolog}
+  is_bigger(X, Y) :- bigger(X, Y).
+  is_bigger(X, Y) :- bigger(X, Z), is_bigger(Z, Y).
+\end{minted}
+
+\subsection{چند کوئری از مثال باغ‌وحش}
+اکنون می‌توانیم سوالات گوناگونی در جهان باغ‌وحش فرضی‌مان مطرح کنیم،
+مثلا اینکه آیا فیل از میمون بزرگتر است یا خیر؟
+\begin{minted}{prolog}
+  ?- is_bigger(elephant, monkey).
+  Yes
+\end{minted}
+یا اینکه:
+به ازای چه مقادیری از \lr{\tt X}، می‌توان گفت \lr{\tt X} از \lr{\tt donkey} بزرگتر است؟
+\begin{minted}{prolog}
+  ?- is_bigger(X, donkey).
+  X = horse ;
+  X = elephant ;
+  No
+\end{minted}
+{\Large \bf \* \vspace{3cm} \*
+\begin{minted}{prolog}
+  ?- is_bigger(X, donkey).
+  X = horse ;
+  X = elephant ;
+  No
+\end{minted}
+
+\noindent
+پس از دریافت جواب از هر قسمت، حرف «\lr{\tt ;}» را وارد می‌کنیم تا جواب‌های جایگزین را ببینیم.
+عبارت \lr{\tt No} در آخر به این دلیل است که غیر از جواب‌های بالایی، جواب جایگزین دیگری وجود ندارد.
+}
+\clearpage
+\subsection{عملیات تطبیق}
+دو ترم مطابق \footnote{\lr{Two terms match}} هستند اگر یکسان باشند یا با مقداردهی به متغیر‌هایشان
+یکسان شوند.
+لازم به ذکر است که مقدار داده شده به تکرار‌های مختلف یک متغیر در سراسر ترم، باید
+مقدار‌های یکسانی داشته باشند. تنها عبارت استثنایی این قانون، متغیر ویژه‌ی «\lr{\tt \_}» است
+که به متغیر ناشناس معروف است.
+
+از اوپراتور «\lr{\tt =}» برای عمل تطابق استفاده می‌شود.
+به مثال‌‌های زیر توجه کنید:
+\begin{minted}{prolog}
+?- is_bigger(X, dog) = is_bigger(elephant, dog).
+X = elephant
+Yes
+?- p(X, 2, 2) = p(1, Y, X).
+No
+?- p(_, 2, 2) = p(1, Y, _).
+Y = 2
+Yes
+\end{minted}
+\clearpage
+به مثال‌های پیچیده‌تر زیر توجه کنید:
+\begin{minted}{prolog}
+?- f(a, g(X, Y)) = f(X, Z), Z = g(W, h(X)).
+X = a
+Y = h(a)
+Z = g(a, h(a))
+W = a
+Yes
+?- X = my_functor(Y).
+X = my_functor(_G177)
+Y = _G177
+Yes
+\end{minted}
+در مثال بالا، متغیر \lr{\tt \_G177}، متغیر‌ی است که پرولوگ برای رسیدن به هدف
+ایجاد کرده. به این معنی که با انجام دو تطابق آخر، می‌توان به هدف
+(که تطابق \lr{\tt X} با \lr{\tt my\_functor(Y)}) است رسید.
+\clearpage
+\section{تفاوت با سایر زبان‌های متداول}
+\subsection{عملیات پیدا کردن عنصر کمینه‌ی یک لیست را در نظر بگیرید}
+\noindent در پرولوگ، تعاریف و فرضها در فایلی نوشته و ذخیره می‌شوند.
+سپس بوسیله‌ی مفسر پرولوگ، از داده‌های جهان پرسش انجام می‌شود.
+
+برای مثال، قطعه کد زیر، رابطه‌ی دوتایی بین لیست و عنصر کمینه‌ی آن را بطور استقرایی
+تعریف می‌کند:
+\begin{minted}{prolog}
+  my_min([X], X).
+  my_min([H | T], H) :- my_min(T, U), H =< U.
+  my_min([H | T], U) :- my_min(T, U), U < H.
+\end{minted}
+
+با تفسیر این فایل توسط مفسر پرولوگ، میتوان به این صورت از رابطه‌ی دوتایی استفاده کرد:
+\begin{minted}{raw}
+$ swipl -f my_min.prolog
+?- my_min([-4,3,-4,5,6],X).
+X = -4 ;
+false.
+\end{minted}
+
+\clearpage
+\noindent این برخلاف روند معمول اکثر زبان‌های متداول است. مثلا برای انجام همین کار در پایتون
+می‌نویسیم:
+
+\begin{minted}{python}
+  def find_min(input_list):
+    min_elem = None
+    for elem in input_list:
+      if min_elem == None or elem < min_elem:
+        min_elem = elem
+    return min_elem
+  print find_min([-4,3,-4,5,6])
+\end{minted}
+و بعد:
+\begin{minted}{raw}
+  $ python find_min.py
+  -4
+\end{minted}
+تفاوت اینجاست که بجای جایگزینی یک تابع با مقدار مورد انتظار،
+رویه‌ها را بصورت رابطه‌هایی تعریف می‌کنیم و از سیستم، مقادیری از جواب را می‌خواهیم
+که رابطه برقرار باشد.
+\clearpage
+\subsection{انجام محاسبات عددی}
+با استفاده از رابطهی دوتایی \lr{\tt is} می‌توان با اعداد در پرولوگ کار کرد.
+به مثال زیر که تعریف فاکتوریل در این زبان است، توجه کنید:
+\begin{minted}{prolog}
+factorial(0, 1).
+
+factorial(N, F) :-
+   N>0,
+   N1 is N-1,
+   factorial(N1, F1),
+   F is N * F1.
+\end{minted}
+
+\clearpage
+\section{برش}
+برش
+\footnote{\lr{Cut}}
+، مکانیزمی برای کنترل حدس‌های پرولوگ در فرایند \lr{Backtrack} است، بدین ترتیب که
+در صورت رسیدن به اوپراتور مخصوص کات در پرولوگ «\lr{\tt !}»، مقادیر جایگزین احتمالی
+برای سر قاعده فراموش می‌شوند.
+مثال زیر مفهوم کات را در پرولوگ بهتر بیان می‌کند:
+
+\vspace{1cm}
+{\large
+\noindent
+سارقی قصد دزدیدن جواهرات از جواهرفروشی‌های شهری را دارد.
+برخی از مغازه‌های شهر فاقد سیستم‌های ایمنی پیشرفته هستند و توانایی کافی
+برای به دام انداختن سارق را ندارند.
+باقی مغازه‌ها مجهز به سیستم‌های پیشرفته‌ی ایمنی هستند و درصورت ورود سارق
+به آن مغازه‌ها، وی را به دام می‌اندازند.
+مغازه‌ای که به آن دستبرد می‌زند از آن جنس نداشته باشد، به مغازه‌ی دیگری دستبرد می‌زند.
+}
+\clearpage
+\noindent اگر بخواهیم با گزاره‌ای، موفقیت سارق در سرقت جنس مورد نظرش را بررسی کنیم، جهان را
+بصورت زیر مدل می‌کنیم.
+\begin{latin}
+\begin{minted}[linenos]{prolog}
+jewelry_store(shop_2).
+jewelry_store(shop_3).
+
+is_insecure(shop_1).
+is_insecure(shop_3).
+
+mug(Shop) :- jewelry_store(Shop), !, is_insecure(Shop).
+\end{minted}
+\end{latin}
+حال، درصورتی که پرسیده شود
+\begin{minted}{prolog}
+?- mug(X).
+\end{minted}
+روند زیر طی می‌شود:
+جواهرفروشی‌های تعریف شده در جهان فرضی ما، به ترتیب تعریف، فروشگاه‌های ۲ و ۳ هستند.
+یعنی به جای \lr{\tt X}، ترتیب فروشگاه‌های ۲ و ۳ قرار می‌گیرند.
+پس از جایگزینی فروشگاه ۲ بعنوان \lr{\tt Shop} در خط ۷، به علامت «\lr{\tt !}» می‌رسیم.
+با رسیدن به این عملگر، گزینه‌های جایگزین برای متغیر‌های «سر» قاعده فراموش می‌شوند.
+(تنها گزینه دیگر، جایگزینی فروشگاه سوم بجای متغیر \lr{\tt Shop} بود.
+حال چون فروشگاه ۲ فروشگاه مجهز به سیستم‌های پیشرفته‌ی امنیتی‌ست، شرط نا امن بودن
+فروشگاه برقرار نمی‌شود، پس سارق موفق به سرقت از فروشگاه نمی‌شود.
+\clearpage
+\noindent دقت کنید اگر جای خطوط ۱ و ۲ در کد بالا عوض می‌شد، ابتدا فروشگاه ۳ برای سرقت امتحان می‌شد،
+و چون فروشگاه ۳ یک فروشگاه ناامن است، سارق موفق به سرقت از ان فروشگاه می‌شد.
+بنابرین:
+\vspace{1.5cm}
+{\begin{center} \Large \bf «چنین نیست که ترتیب قواعد مشخص شده در یک برنامه پرولوگ بی‌اهمیت باشد» \end{center}}
+\clearpage
+\section{چند برنامه نمونه}
+\subsection{اتصال دو لیست به هم}
+\begin{minted}{prolog}
+my_concat([], L, L).
+my_concat([H|T], L, [H|TL]) :- my_concat(T, L, TL).
+\end{minted}
+\subsection{پیدا کردن عنصر انتهایی لیست}
+\begin{minted}{prolog}
+my_last1([X], X).
+my_last1([H|T], X) :- my_last1(T, X).
+
+my_last2(L, X) :- my_concat(LL, [X], L).
+\end{minted}
+\subsection{برگرداندن لیست}
+\begin{minted}{prolog}
+my_reverse([], []).
+my_reverse([H | T], L) :-
+  my_reverse(T, TR), my_concat(TR, [H], L).
+\end{minted}
+\clearpage
+\subsection{\lr{Merge Sort}}
+\begin{minted}{prolog}
+mergesort([], []).
+mergesort([A], [A]).
+
+mergesort([A, B | Rest], S) :-
+  divide([A, B | Rest], L1, L2),
+  mergesort(L1, S1),
+  mergesort(L2, S2),
+  my_merge(S1, S2, S).
+
+divide([], [], []).
+divide([A], [A], []).
+
+divide([A, B | R], [A | Ra], [B | Rb]) :-  divide(R, Ra, Rb).
+
+my_merge(A, [], A).
+my_merge([], B, B).
+
+my_merge([A | Ra], [B | Rb], [A | M]) :-
+  A =< B,
+  my_merge(Ra, [B | Rb], M).
+my_merge([A | Ra], [B | Rb], [B | M]) :-
+  A > B,
+  my_merge([A | Ra], Rb, M).
+\end{minted}
+
+\clearpage
+\begin{latin}
+\begin{thebibliography}{99}
+  \bibitem{AA} Endriss, Ulle.
+    {\em An Introduction to Prolog Programming},
+    Institute for Logic, Language and Computation
+  \bibitem{LP} Literate Programs wiki contributors.
+    {\em Merge sort (Prolog)},
+    Literate Programs wiki
+    (\url{http://en.literateprograms.org/Merge_sort_(Prolog)})
+\end{thebibliography}
+\end{latin}
+\end{document}
