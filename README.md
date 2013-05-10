@@ -1,9 +1,11 @@
-These are slides I prepared to present an introductory talk on
+These are slides that I prepared to present an introductory talk on
 **Prolog programming language**.
 
 To compile, you need `latexmk`.
 
-Just run `make` to obtain `untitled.pdf` file.
+Run `make` to obtain `untitled.pdf` file.
+
+![A panorama of marseille city](marseille.jpg)
 
 License
 =======
